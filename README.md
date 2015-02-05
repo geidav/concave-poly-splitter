@@ -1,2 +1,2 @@
-# concave-poly-splitter
-Code to split a concave polygon by a line
+# Splitting a concave polygon by a line
+Source code to split a concave polygon by a line. Written in C++ using STL and Qt5. It should be straightforward to port to any other language. This code is just to illustrate how the algorithm works. It's by no means optimized.
