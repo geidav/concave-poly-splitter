@@ -1,3 +1,4 @@
+#include <iterator>
 #include <cassert>
 #include <queue>
 
@@ -17,6 +18,13 @@ static LineSide GetSideOfLine(const QLineF &line, const QPointF &pt)
 static float PointDistance(const QPointF &pt0, const QPointF &pt1)
 {
     return QVector2D(pt0-pt1).length();
+}
+
+static double CalcSignedDistance(const QLineF &line, const QPointF &p)
+{
+    // scalar projection on line. in case of co-linear
+    // vectors this is equal to the signed distance.
+    return (p.x()-line.p1().x())*(line.p2().x()-line.p1().x())+(p.y()-line.p1().y())*(line.p2().y()-line.p1().y());
 }
 
 // -----------------------------------------------------------------------
@@ -75,10 +83,16 @@ void PolySplitter::SortEdges(const QLineF &line)
     // the start position of the split line
     std::sort(EdgesOnLine.begin(), EdgesOnLine.end(), [&](PolyEdge *e0, PolyEdge *e1)
     {
-        return (PointDistance(line.p1(), e0->StartPos) < PointDistance(line.p1(), e1->StartPos));
+        // it's important to take the signed distance here,
+        // because it can happen that the split line starts/ends
+        // inside the polygon. in that case intersection points
+        // can fall on both sides of the split line and taking
+        // an unsigned distance metric will result in wrongly
+        // ordered points in EdgesOnLine.
+        return CalcSignedDistance(line, e0->StartPos) < CalcSignedDistance(line, e1->StartPos);
     });
 
-    // compute distance between the each edge's start
+    // compute distance between each edge's start
     // position and the first edge's start position
     for (size_t i=1; i<EdgesOnLine.size(); i++)
         EdgesOnLine[i]->DistOnLine = PointDistance(EdgesOnLine[i]->StartPos, EdgesOnLine[0]->StartPos);
